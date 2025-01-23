@@ -11,9 +11,48 @@ const ContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [resultData, setResultData] = useState("");
 
+  const delayPara = (index, nextWord) => {
+    setTimeout(function (params) {
+      setResultData((prev) => prev + nextWord);
+    }, 75 * index);
+  };
+
+  const newChat = () => {
+    setLoading(false);
+    setShowResult(false);
+  };
+
   const onSent = async (prompt) => {
     try {
-      await runChat(prompt);
+      setResultData("");
+      setLoading(true);
+      setShowResult(true);
+      let response;
+      if (prompt !== undefined) {
+        response = await runChat(prompt);
+        setRecentPrompt(prompt);
+      } else {
+        setPrevPrompts((prev) => [...prev, input]);
+        setRecentPrompt(input);
+        response = await runChat(input);
+      }
+      let responseArray = response.split("**");
+      let newResponse = "";
+      for (let i = 0; i < responseArray.length; i++) {
+        if (i === 0 || i % 2 !== 1) {
+          newResponse += responseArray[i];
+        } else {
+          newArray += "<b>" + responseArray[i] + "</b>";
+        }
+      }
+      let newResponse2 = newResponse.split("*").join("</br>");
+      let newResponseArray = newResponse2.split(" ");
+      for (let i = 0; i < newResponseArray.length; i++) {
+        const nextWord = newResponseArray[i];
+        delayPara(i, nextWord + "");
+      }
+      setLoading(false);
+      setInput("");
     } catch (error) {
       console.error("Error sending prompt:", error);
     }
@@ -30,6 +69,7 @@ const ContextProvider = ({ children }) => {
     resultData,
     input,
     setInput,
+    newChat,
   };
 
   return <Context.Provider value={contextValue}>{children}</Context.Provider>;
